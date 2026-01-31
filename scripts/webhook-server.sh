@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/giraycoskun/.local/bin/"
 
 
 PROJECT_DIR="/home/giraycoskun/Code/webhook-server"
