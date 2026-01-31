@@ -1,0 +1,21 @@
+[Unit]
+Description=Webhook Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/home/giraycoskun/Code/webhook-server/
+Environment="PATH=/home/giraycoskun/Code/webhook-server/.venv/bin"
+EnvironmentFile=/home/giraycoskun/Code/webhook-server/.env
+ExecStart=/home/giraycoskun/Code/webhook-server/.venv/bin/gunicorn -w 2 -b 0.0.0.0:9000 src.main:app
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=webhook-server
+
+[Install]
+WantedBy=multi-user.target
