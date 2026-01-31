@@ -115,7 +115,7 @@ def webhook(project: str):
         daemon=True,
     )
     thread.start()
-    logger.info(f"Script started in background thread")
+    logger.info("Script started in background thread")
 
     return jsonify({"status": "OK", "project": project}), 200
 
