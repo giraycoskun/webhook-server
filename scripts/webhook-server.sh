@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PROJECT_DIR="/home/giraycoskun/Code/MyGithub/webhook-server"
+PROJECT_DIR="/home/giraycoskun/Code/webhook-server"
 SERVICE_NAME="webhook-server"
 
 cd "$PROJECT_DIR"

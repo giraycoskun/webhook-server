@@ -4,6 +4,8 @@ Webhook Server is a lightweight Flask (python) server to listen for incoming web
 
 It aims to run as a systemd service on a Linux server, listening for incoming webhooks from platforms like GitHub, GitLab, or Bitbucket. Upon receiving a webhook, it triggers a bash script to handle the event. 
 
+Unfortuantely depending on script, user has to be priveleged to run certain commands like restarting services, pulling from git repos etc.
+
 ```
 Github Webhook ----> Webhook Server ----> Bash Script
 ```
@@ -37,18 +39,8 @@ gunicorn -w 4 -b 0.0.0.0:9000 src.main:app
 
 ## Endpoints
 
-- `POST /webhook/<command>/<project>` - Execute a command for a specific project
+- `POST /webhook/<project>` - Execute a command for a specific project
 - `GET /health` - Health check endpoint
-
-### Allowed Commands
-
-The following commands are supported (each requires a corresponding `<command>.sh` script in `SCRIPTS_DIR`):
-
-- `deploy` - Deploy the project
-- `restart` - Restart the project service
-- `stop` - Stop the project service
-- `start` - Start the project service
-- `update` - Update the project
 
 ### Scripts Directory Structure
 
@@ -91,9 +83,9 @@ Logs are written to:
    sudo nano .env  # Edit with your values
    ```
 
-5. Install and enable the service:
+5. Install/Update and Enable the service:
    ```bash
-   sudo cp webhook-server.service /etc/systemd/system/
+   sudo cp webhook-server.service /etc/systemd/system/ # requires to edit user and filepaths
    sudo systemctl daemon-reload
    sudo systemctl enable webhook-server
    sudo systemctl start webhook-server
@@ -114,8 +106,10 @@ Logs are written to:
 5. Select events to trigger the webhook
 
 ## Sample
-```
-curl -X POST "https://webhook.giraycoskun.dev/server_giraycoskun_dev" \
+
+```bash
+# Example cURL to test webhook endpoint
+curl -X POST "https://webhook.giraycoskun.dev/server-giraycoskun-dev" \
      -H "Accept: */*" \
      -H "Content-Type: application/json" \
      -H "User-Agent: GitHub-Hookshot/9082f66" \
@@ -128,4 +122,3 @@ curl -X POST "https://webhook.giraycoskun.dev/server_giraycoskun_dev" \
      -H "X-Hub-Signature-256: sha256=fedd1145dac9d566bdf83b1843a8d3d64759c3313f211b47ca025e8e99cb6977" \
      -d '{"ref": "refs/heads/main", "repository": {"name": "f1-board", "full_name": "giraycoskun/f1-board"}}'
 ```
-

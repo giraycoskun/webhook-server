@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 import threading
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -56,15 +56,20 @@ def run_script_with_logging(script_path: Path, project: str):
             text=True,
         )
 
-        for line in process.stdout:
-            logger.info(f"[{project}] {line.rstrip()}")
+        if process.stdout is not None:
+            for line in process.stdout:
+                logger.info(f"[{project}] {line.rstrip()}")
+        else:
+            logger.error(f"[{project}] No stdout to read from the process")
 
         process.wait()
 
         if process.returncode == 0:
             logger.info(f"[{project}] Script completed successfully (exit code: 0)")
         else:
-            logger.error(f"[{project}] Script failed with exit code: {process.returncode}")
+            logger.error(
+                f"[{project}] Script failed with exit code: {process.returncode}"
+            )
 
     except Exception as e:
         logger.error(f"[{project}] Error running script: {e}")
@@ -122,12 +127,9 @@ def webhook(project: str):
 
 @app.route("/health", methods=["GET"])
 def health():
-    from datetime import datetime, timezone
-    response = {"status": "OK", "timestamp": datetime.now(timezone.utc).isoformat()}
+    response = {"status": "OK", "timestamp": datetime.now(UTC).isoformat()}
     logger.info("Health check request: " + str(response))
-    return jsonify(
-        response
-    )
+    return jsonify(response)
 
 
 def main():
