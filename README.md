@@ -112,3 +112,20 @@ Logs are written to:
 3. Set Content type to `application/json`
 4. Set Secret to match your `WEBHOOK_SECRET`
 5. Select events to trigger the webhook
+
+## Sample
+```
+curl -X POST "https://webhook.giraycoskun.dev/server_giraycoskun_dev" \
+     -H "Accept: */*" \
+     -H "Content-Type: application/json" \
+     -H "User-Agent: GitHub-Hookshot/9082f66" \
+     -H "X-GitHub-Delivery: bb6f8208-fd6e-11f0-9417-29c285ee9596" \
+     -H "X-GitHub-Event: push" \
+     -H "X-GitHub-Hook-ID: 582933851" \
+     -H "X-GitHub-Hook-Installation-Target-ID: 1080613886" \
+     -H "X-GitHub-Hook-Installation-Target-Type: repository" \
+     -H "X-Hub-Signature: sha1=e4828872c922807d6e1dbc9f7e8275eff220339a" \
+     -H "X-Hub-Signature-256: sha256=fedd1145dac9d566bdf83b1843a8d3d64759c3313f211b47ca025e8e99cb6977" \
+     -d '{"ref": "refs/heads/main", "repository": {"name": "f1-board", "full_name": "giraycoskun/f1-board"}}'
+```
+

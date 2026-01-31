@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e  # Exit immediately if any command fails
 
+cd /home/giraycoskun/Code/server.giraycoskun.dev
+
 echo "--- Fetching latest changes ---"
 git fetch https://${GITHUB_TOKEN}@github.com/giraycoskun/server.giraycoskun.dev.git main
 
