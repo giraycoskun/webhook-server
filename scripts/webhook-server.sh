@@ -9,9 +9,9 @@ SERVICE_NAME="webhook-server"
 
 cd "$PROJECT_DIR"
 
-echo "Pulling latest changes from git..."
-git fetch origin
-git reset --hard origin/main
+echo "Fetching and Pulling latest changes from git..."
+git fetch https://${GITHUB_TOKEN}@github.com/giraycoskun/webhook-server.git main
+git pull https://${GITHUB_TOKEN}@github.com/giraycoskun/webhook-server.git main
 
 echo "Syncing dependencies with uv..."
 uv sync
