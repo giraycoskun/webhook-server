@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e  # Exit immediately if any command fails
 
+export PATH="/home/giraycoskun/.nvm/versions/node/v24.11.1/bin:$PATH"
+
 # Define paths explicitly
 GIT_CMD="/usr/bin/git"    # Update this based on 'which git' output
 PNPM_CMD="/home/giraycoskun/.nvm/versions/node/v24.11.1/bin/pnpm" # Update this based on 'which pnpm' output
