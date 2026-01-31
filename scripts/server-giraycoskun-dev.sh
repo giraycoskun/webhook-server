@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e  # Exit immediately if any command fails
 
+export HUSKY=0
+
 export PATH="/home/giraycoskun/.nvm/versions/node/v24.11.1/bin:$PATH"
 
 # Define paths explicitly
