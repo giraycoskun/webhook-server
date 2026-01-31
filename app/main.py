@@ -3,6 +3,8 @@ import hmac
 import os
 import subprocess
 import sys
+import threading
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -39,6 +41,33 @@ app = Flask(__name__)
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 SCRIPTS_DIR = Path(os.getenv("SCRIPTS_DIR", "./scripts"))
 PORT = int(os.getenv("PORT", "9000"))
+
+
+def run_script_with_logging(script_path: Path, project: str):
+    """Run script and log output to loguru."""
+    try:
+        logger.info(f"[{project}] Starting script: {script_path}")
+
+        process = subprocess.Popen(
+            [str(script_path), project],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=SCRIPTS_DIR,
+            text=True,
+        )
+
+        for line in process.stdout:
+            logger.info(f"[{project}] {line.rstrip()}")
+
+        process.wait()
+
+        if process.returncode == 0:
+            logger.info(f"[{project}] Script completed successfully (exit code: 0)")
+        else:
+            logger.error(f"[{project}] Script failed with exit code: {process.returncode}")
+
+    except Exception as e:
+        logger.error(f"[{project}] Error running script: {e}")
 
 
 def verify_github_signature(payload: bytes, signature_header: str | None) -> bool:
@@ -80,17 +109,13 @@ def webhook(project: str):
 
     logger.info(f"Executing {script_path} for project {project}")
 
-    try:
-        result = subprocess.Popen(
-            [str(script_path), project],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=SCRIPTS_DIR,
-        )
-        logger.info(f"Script started with PID: {result.pid}")
-    except Exception as e:
-        logger.error(f"Error executing script: {e}")
-        return jsonify({"error": str(e)}), 500
+    thread = threading.Thread(
+        target=run_script_with_logging,
+        args=(script_path, project),
+        daemon=True,
+    )
+    thread.start()
+    logger.info(f"Script started in background thread")
 
     return jsonify({"status": "OK", "project": project}), 200
 
