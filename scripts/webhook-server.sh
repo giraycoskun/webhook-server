@@ -5,7 +5,7 @@ export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/giraycoskun/.loc
 
 
 PROJECT_DIR="/home/giraycoskun/Code/webhook-server"
-SERVICE_NAME="webhook-server"
+SERVICE_NAME="webhook-server.service"
 
 cd "$PROJECT_DIR"
 
@@ -17,7 +17,6 @@ echo "Syncing dependencies with uv..."
 uv sync
 
 echo "Restarting $SERVICE_NAME service..."
-sudo systemctl restart "$SERVICE_NAME"
+sudo systemd-run --on-active=5s --unit=webhook-restart-timer --description="Restart Webhook" /bin/systemctl restart webhook-server
 
-echo "Done. Service status:"
-sudo systemctl status "$SERVICE_NAME" --no-pager
+echo "--- webhook-server is updated ---"
