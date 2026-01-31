@@ -62,7 +62,7 @@ def verify_github_signature(payload: bytes, signature_header: str | None) -> boo
     return hmac.compare_digest(expected_signature, signature_header)
 
 
-@app.route("/webhook/deploy/<project>", methods=["POST"])
+@app.route("/<project>", methods=["POST"])
 def webhook(project: str):
     logger.info(f"Received webhook - project: {project}")
 
@@ -98,9 +98,10 @@ def webhook(project: str):
 @app.route("/health", methods=["GET"])
 def health():
     from datetime import datetime, timezone
-
+    response = {"status": "OK", "timestamp": datetime.now(timezone.utc).isoformat()}
+    logger.info("Health check request: " + str(response))
     return jsonify(
-        {"status": "OK", "timestamp": datetime.now(timezone.utc).isoformat()}
+        response
     )
 
 
