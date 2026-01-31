@@ -3,7 +3,7 @@ set -e  # Exit immediately if any command fails
 
 # Define paths explicitly
 GIT_CMD="/usr/bin/git"    # Update this based on 'which git' output
-PNPM_CMD="/usr/local/bin/pnpm" # Update this based on 'which pnpm' output
+PNPM_CMD="/home/giraycoskun/.nvm/versions/node/v24.11.1/bin/pnpm" # Update this based on 'which pnpm' output
 
 cd /home/giraycoskun/Code/server.giraycoskun.dev
 
