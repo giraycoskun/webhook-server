@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e  # Exit immediately if any command fails
 
-export HUSKY=0
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/home/giraycoskun/.nvm/versions/node/v24.11.1/bin"
 
-export PATH="/home/giraycoskun/.nvm/versions/node/v24.11.1/bin:$PATH"
+export HUSKY=0
 
 # Define paths explicitly
 GIT_CMD="/usr/bin/git"    # Update this based on 'which git' output
