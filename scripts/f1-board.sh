@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e  # Exit immediately if any command fails
 
+source .env
+
 DOCKER_COMPOSE_FILENAME="docker-compose.prod.yml"
 PROJECT_DIR="/home/giraycoskun/Code/f1-board"
 
