@@ -47,7 +47,16 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure CORS for Swagger UI - only allow specific origins
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:9000").split(",")
-CORS(app, resources={"/apispec.json": {"origins": ALLOWED_ORIGINS}})
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": ALLOWED_ORIGINS,
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type", "X-Hub-Signature-256", "X-Password"],
+        }
+    },
+)
 
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 SCRIPTS_DIR = Path(os.getenv("SCRIPTS_DIR", "./scripts"))
