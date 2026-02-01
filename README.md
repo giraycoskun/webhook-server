@@ -2,13 +2,22 @@
 
 Webhook Server is a lightweight Flask (python) server to listen for incoming webhooks and process them based on predefined rules.
 
-It aims to run as a systemd service on a Linux server, listening for incoming webhooks from platforms like GitHub, GitLab, or Bitbucket. Upon receiving a webhook, it triggers a bash script to handle the event. 
+This project is meant to be a personal project (shared as it might be useful example) to keep track of incoming webhooks and trigger custom bash scripts. It aims to run as a systemd service on a Linux server, listening for incoming webhooks from platforms like GitHub, GitLab, or Bitbucket. Upon receiving a webhook, it triggers a bash script to handle the event.  
 
 Unfortuantely depending on script, user has to be priveleged to run certain commands like restarting services, pulling from git repos etc.
 
 ```
 Github Webhook ----> Webhook Server ----> Bash Script
 ```
+
+## Features
+
+- ✅ GitHub webhook integration with HMAC signature verification
+- ✅ Password-protected manual trigger endpoint
+- ✅ **Interactive OpenAPI/Swagger documentation**
+- ✅ Logging with loguru
+- ✅ Background script execution
+- ✅ Health check endpoint
 
 ## Installation
 
@@ -31,31 +40,120 @@ LOG_DIR=/var/log/webhook-server
 
 ```bash
 # Development
-python src/main.py
+uv run python -m app.main
 
 # Production with gunicorn
 gunicorn -w 4 -b 0.0.0.0:9000 src.main:app
 ```
 
-## Endpoints
+## API Endpoints
 
-- `POST /webhook/<project>` - Execute a command for a specific project
-- `GET /health` - Health check endpoint
+### 1. Health Check
+**GET** `/health`
 
-### Scripts Directory Structure
+Check server health and version.
+
+```bash
+curl http://localhost:9000/health
+```
+
+Response:
+```json
+{
+  "status": "OK",
+  "version": "1.0.0",
+  "timestamp": "2026-02-01T12:00:00Z"
+}
+```
+
+### 2. GitHub Webhook
+**POST** `/{project}`
+
+Receive GitHub webhook events (requires valid HMAC signature).
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-Hub-Signature-256: sha256=..." \
+  -d '{"ref": "refs/heads/main"}' \
+  http://localhost:9000/myproject
+```
+
+### 3. Manual Trigger (Password Protected)
+**POST** `/manual/{project}`
+
+Manually trigger build scripts with password authentication.
+
+#### Using Header (Recommended):
+```bash
+curl -X POST \
+  -H "X-Password: your_password" \
+  http://localhost:9000/manual/myproject
+```
+
+#### Using Query Parameter:
+```bash
+curl -X POST \
+  "http://localhost:9000/manual/myproject?password=your_password"
+```
+
+Response:
+```json
+{
+  "status": "OK",
+  "project": "myproject",
+  "trigger": "manual"
+}
+```
+
+## Directory Structure
 
 ```
-scripts/
-├── project.sh      # Called for /webhook/<project>
+.
+├── main.py                  # Main Flask application
+├── requirements.txt         # Python dependencies
+├── .env                     # Environment configuration (create this)
+├── scripts/                 # Build scripts directory
+│   ├── myproject.sh
+│   └── another-project.sh
+└── logs/                    # Log files (auto-created)
+    └── webhook-server.log
 ```
 
-Each script receives the project name as the first argument (`$1`).
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `WEBHOOK_SECRET` | No | None | GitHub webhook secret for HMAC verification |
+| `PASS` | Yes* | None | Password for manual trigger endpoint |
+| `SCRIPTS_DIR` | No | `./scripts` | Directory containing build scripts |
+| `LOG_DIR` | No | `./logs` | Directory for log files |
+| `PORT` | No | `9000` | Server port |
+
+*Required if using the `/manual/{project}` endpoint
+
+
+## Security Notes
+
+### GitHub Webhooks
+- Configure webhook secret in GitHub repository settings
+- Set the same secret in your `WEBHOOK_SECRET` environment variable
+- Requests without valid signatures are rejected with 403
+
+### Manual Triggers
+- Always use HTTPS in production
+- Password is verified using constant-time comparison
+- Use the `X-Password` header instead of query parameters (headers are less likely to be logged)
+- Keep your `PASS` environment variable secret
 
 ## Logging
 
 Logs are written to:
-- **Console**: INFO level and above
-- **File**: `$LOG_DIR/webhook-server.log` with DEBUG level, 10MB rotation, 30-day retention, gzip compression
+- Console (INFO level and above)
+- File at `{LOG_DIR}/webhook-server.log` (DEBUG level)
+  - Rotated at 5 MB
+  - Retained for 30 days
+  - Compressed with gzip
 
 ## Systemd Service Setup
 
@@ -105,20 +203,34 @@ Logs are written to:
 4. Set Secret to match your `WEBHOOK_SECRET`
 5. Select events to trigger the webhook
 
-## Sample
+## Testing the API
 
+### Using Swagger UI (Interactive)
+1. Start the server
+2. Open http://localhost:9000/docs
+3. Click on any endpoint to expand it
+4. Click "Try it out"
+5. Fill in parameters and click "Execute"
+
+### Using curl
+
+Health check:
 ```bash
-# Example cURL to test webhook endpoint
-curl -X POST "https://webhook.giraycoskun.dev/server-giraycoskun-dev" \
-     -H "Accept: */*" \
-     -H "Content-Type: application/json" \
-     -H "User-Agent: GitHub-Hookshot/9082f66" \
-     -H "X-GitHub-Delivery: bb6f8208-fd6e-11f0-9417-29c285ee9596" \
-     -H "X-GitHub-Event: push" \
-     -H "X-GitHub-Hook-ID: 582933851" \
-     -H "X-GitHub-Hook-Installation-Target-ID: 1080613886" \
-     -H "X-GitHub-Hook-Installation-Target-Type: repository" \
-     -H "X-Hub-Signature: sha1=e4828872c922807d6e1dbc9f7e8275eff220339a" \
-     -H "X-Hub-Signature-256: sha256=fedd1145dac9d566bdf83b1843a8d3d64759c3313f211b47ca025e8e99cb6977" \
-     -d '{"ref": "refs/heads/main", "repository": {"name": "f1-board", "full_name": "giraycoskun/f1-board"}}'
+curl http://localhost:9000/health
 ```
+
+Manual trigger:
+```bash
+curl -X POST \
+  -H "X-Password: mypass123" \
+  http://localhost:9000/manual/test-project
+```
+
+Get OpenAPI spec:
+```bash
+curl http://localhost:9000/openapi.json | jq
+```
+
+## License
+
+MIT
