@@ -8,8 +8,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, redirect, request, url_for
 from loguru import logger
+
+from app import version
 
 load_dotenv()
 
@@ -67,9 +69,7 @@ def run_script_with_logging(script_path: Path, project: str):
         if process.returncode == 0:
             logger.info(f"[{project}] Script completed successfully (exit code: 0)")
         else:
-            logger.error(
-                f"[{project}] Script failed with exit code: {process.returncode}"
-            )
+            logger.error(f"[{project}] Script failed with exit code: {process.returncode}")
 
     except Exception as e:
         logger.error(f"[{project}] Error running script: {e}")
@@ -127,10 +127,14 @@ def webhook(project: str):
 
 @app.route("/health", methods=["GET"])
 def health():
-    response = {"status": "OK", "timestamp": datetime.now(UTC).isoformat()}
+
+    response = {"status": "OK", "version": version, "timestamp": datetime.now(UTC).isoformat()}
     logger.info("Health check request: " + str(response))
     return jsonify(response)
 
+@app.route("/")
+def root():
+    return redirect(url_for("health"))
 
 def main():
     if not WEBHOOK_SECRET:
