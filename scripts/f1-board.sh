@@ -10,10 +10,10 @@ echo "--- Changing directory to f1-board ---"
 cd "$PROJECT_DIR"
 
 echo "--- Fetching latest changes ---"
-git fetch https://${GITHUB_TOKEN}@github.com/giraycoskun/server.giraycoskun.dev.git main
+git fetch https://${GITHUB_TOKEN}@github.com/giraycoskun/f1-board.git main
 
 echo "--- Pulling latest changes ---"
-git pull https://${GITHUB_TOKEN}@github.com/giraycoskun/server.giraycoskun.dev.git main
+git pull https://${GITHUB_TOKEN}@github.com/giraycoskun/f1-board.git main
 
 echo "--- Stopping existing Docker containers ---"
 docker-compose -f $DOCKER_COMPOSE_FILENAME down
