@@ -89,7 +89,7 @@ swagger_template = {
         }
     },
     "basePath": "/",
-    "schemes": ["http", "https"],
+    "schemes": ["https", "http"],  # HTTPS first for Cloudflare tunnel
     "securityDefinitions": {
         "GitHubSignature": {
             "type": "apiKey",
