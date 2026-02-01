@@ -11,7 +11,7 @@ echo "--- Ensuring project directory exists ---"
 if [ ! -d "$PROJECT_DIR" ]; then
     echo "Directory does not exist. Creating and cloning repository..."
     mkdir -p "$PROJECT_DIR"
-    git clone "https://${GITHUB_TOKEN}@github.com/giraycoskun/f1-board.git" "$PROJECT_DIR"
+    git clone https://${GITHUB_TOKEN}@github.com/giraycoskun/f1-board.git "$PROJECT_DIR"
 else
     echo "Directory exists."
 fi
@@ -20,7 +20,7 @@ echo "--- Changing directory to f1-board ---"
 cd "$PROJECT_DIR"
 
 echo "--- Pulling latest changes from Git ---"
-git pull "https://${GITHUB_TOKEN}@github.com/${GIT_REPO_NAME}.git" main
+git pull "https://${GITHUB_TOKEN}@github.com/giraycoskun/f1-board.git" main
 
 echo "--- Stopping existing Docker containers ---"
 docker-compose -f $DOCKER_COMPOSE_FILENAME down
