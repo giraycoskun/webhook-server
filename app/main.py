@@ -12,6 +12,7 @@ from flasgger import Swagger
 from flask import Flask, jsonify, redirect, request, url_for
 from flask_cors import CORS
 from loguru import logger
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app import version
 
@@ -41,8 +42,8 @@ logger.add(
     format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} | {message}",
     level="DEBUG",
 )
-
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure CORS for Swagger UI - only allow specific origins
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:9000").split(",")
