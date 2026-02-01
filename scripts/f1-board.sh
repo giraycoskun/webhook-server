@@ -9,7 +9,7 @@ export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 echo "--- Changing directory to f1-board ---"
 cd "$PROJECT_DIR"
 
-cho "--- Fetching latest changes ---"
+echo "--- Fetching latest changes ---"
 git fetch https://${GITHUB_TOKEN}@github.com/giraycoskun/server.giraycoskun.dev.git main
 
 echo "--- Pulling latest changes ---"
