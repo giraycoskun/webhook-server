@@ -46,7 +46,11 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure CORS for Swagger UI - only allow specific origins
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:9000").split(",")
+ALLOWED_ORIGINS = [
+  origin.strip()
+  for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:9000").split(",")
+  if origin.strip()
+]
 CORS(
     app,
     resources={
@@ -82,14 +86,13 @@ swagger_template = {
     "swagger": "2.0",
     "info": {
         "title": "Webhook Server API",
-        "description": "A Flask-based webhook server for triggering build scripts via GitHub webhooks or manual triggers",
+        "description": "A Flask-based webhook server for triggering build scripts via GitHub webhooks or manual triggers",  # noqa: E501
         "version": version,
         "contact": {
             "name": "API Support"
         }
     },
     "basePath": "/",
-    "schemes": ["https", "http"],  # HTTPS first for Cloudflare tunnel
     "securityDefinitions": {
         "GitHubSignature": {
             "type": "apiKey",
@@ -151,6 +154,23 @@ def run_script_with_logging(script_path: Path, project: str):
 
     except Exception as e:
         logger.error(f"[{project}] Error running script: {e}")
+
+
+def _normalize_project_name(name: str) -> str:
+    return "".join(ch for ch in name.lower() if ch.isalnum())
+
+
+def resolve_script_path(project: str) -> tuple[Path | None, str]:
+    direct_path = SCRIPTS_DIR / f"{project}.sh"
+    if direct_path.exists():
+        return direct_path, project
+
+    normalized_target = _normalize_project_name(project)
+    for script_path in SCRIPTS_DIR.glob("*.sh"):
+        if _normalize_project_name(script_path.stem) == normalized_target:
+            return script_path, script_path.stem
+
+    return None, project
 
 
 def verify_github_signature(payload: bytes, signature_header: str | None) -> bool:
@@ -242,7 +262,7 @@ def webhook(project: str):
             error:
               type: string
               example: Script not found myproject.sh
-    """
+    """  # noqa: E501
     logger.info(f"Received webhook - project: {project}")
 
     payload = request.get_data()
@@ -252,16 +272,16 @@ def webhook(project: str):
         logger.warning("Invalid signature - rejecting request")
         return jsonify({"error": "Invalid signature"}), 403
 
-    script_path = SCRIPTS_DIR / f"{project}.sh"
-    if not script_path.exists():
-        logger.error(f"Script not found: {script_path}")
+    script_path, resolved_project = resolve_script_path(project)
+    if script_path is None:
+        logger.error(f"Script not found for project: {project}")
         return jsonify({"error": f"Script not found: {project}.sh"}), 500
 
     logger.info(f"Executing {script_path} for project {project}")
 
     thread = threading.Thread(
         target=run_script_with_logging,
-        args=(script_path, project),
+        args=(script_path, resolved_project),
         daemon=True,
     )
     thread.start()
@@ -339,7 +359,7 @@ def manual_trigger(project: str):
             error:
               type: string
               example: Server configuration error
-    """
+    """  # noqa: E501
     logger.info(f"Manual trigger request - project: {project}")
     
     # Check password from header or query parameter
@@ -353,16 +373,16 @@ def manual_trigger(project: str):
         logger.warning(f"Invalid password attempt for project: {project}")
         return jsonify({"error": "Invalid password"}), 401
     
-    script_path = SCRIPTS_DIR / f"{project}.sh"
-    if not script_path.exists():
-        logger.error(f"Script not found: {script_path}")
+    script_path, resolved_project = resolve_script_path(project)
+    if script_path is None:
+        logger.error(f"Script not found for project: {project}")
         return jsonify({"error": f"Script not found: {project}.sh"}), 404
     
     logger.info(f"Manual trigger: executing {script_path} for project {project}")
     
     thread = threading.Thread(
         target=run_script_with_logging,
-        args=(script_path, project),
+        args=(script_path, resolved_project),
         daemon=True,
     )
     thread.start()

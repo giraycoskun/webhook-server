@@ -31,10 +31,15 @@ Copy `.env.example` to `.env` and configure:
 
 ```bash
 WEBHOOK_SECRET=your-github-webhook-secret
+PASS=your-manual-trigger-password
 SCRIPTS_DIR=./scripts
 PORT=9000
 LOG_DIR=/var/log/webhook-server
+ALLOWED_ORIGINS=http://localhost:9000,https://your-server.com
 ```
+
+`ALLOWED_ORIGINS` should include the exact origin where you open Swagger UI (`/docs`).
+If it is missing or mismatched, browser-based requests may fail with `TypeError: Failed to fetch`.
 
 ## Usage
 
@@ -83,6 +88,9 @@ curl -X POST \
 **POST** `/manual/{project}`
 
 Manually trigger build scripts with password authentication.
+
+Project name matching supports a normalized alias format. For example, both
+`f1-board` and `f1board` can match `scripts/f1-board.sh`.
 
 #### Using Header (Recommended):
 ```bash
@@ -223,7 +231,7 @@ Manual trigger:
 ```bash
 curl -X POST \
   -H "X-Password: mypass123" \
-  http://localhost:9000/manual/test-project
+  http://localhost:9000/manual/f1board
 ```
 
 Get OpenAPI spec:
