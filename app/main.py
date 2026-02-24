@@ -125,6 +125,9 @@ swagger_template = {
 
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
+running_projects: set[str] = set()
+running_projects_lock = threading.Lock()
+
 
 def run_script_with_logging(script_path: Path, project: str):
     """Run script and log output to loguru."""
@@ -154,6 +157,10 @@ def run_script_with_logging(script_path: Path, project: str):
 
     except Exception as e:
         logger.error(f"[{project}] Error running script: {e}")
+    finally:
+      with running_projects_lock:
+        running_projects.discard(project)
+      logger.info(f"[{project}] Execution lock released")
 
 
 def _normalize_project_name(name: str) -> str:
@@ -171,6 +178,14 @@ def resolve_script_path(project: str) -> tuple[Path | None, str]:
             return script_path, script_path.stem
 
     return None, project
+
+
+def try_start_project_execution(project: str) -> bool:
+    with running_projects_lock:
+        if project in running_projects:
+            return False
+        running_projects.add(project)
+        return True
 
 
 def verify_github_signature(payload: bytes, signature_header: str | None) -> bool:
@@ -262,6 +277,14 @@ def webhook(project: str):
             error:
               type: string
               example: Script not found myproject.sh
+      409:
+        description: Script is already running for this project
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: Script already running
     """  # noqa: E501
     logger.info(f"Received webhook - project: {project}")
 
@@ -276,6 +299,10 @@ def webhook(project: str):
     if script_path is None:
         logger.error(f"Script not found for project: {project}")
         return jsonify({"error": f"Script not found: {project}.sh"}), 404
+
+    if not try_start_project_execution(resolved_project):
+      logger.warning(f"Script already running for project: {resolved_project}")
+      return jsonify({"error": "Script already running"}), 409
 
     logger.info(f"Executing {script_path} for project {project}")
 
@@ -359,6 +386,14 @@ def manual_trigger(project: str):
             error:
               type: string
               example: Server configuration error
+      409:
+        description: Script is already running for this project
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: Script already running
     """  # noqa: E501
     logger.info(f"Manual trigger request - project: {project}")
     
@@ -377,6 +412,10 @@ def manual_trigger(project: str):
     if script_path is None:
         logger.error(f"Script not found for project: {project}")
         return jsonify({"error": f"Script not found: {project}.sh"}), 404
+
+    if not try_start_project_execution(resolved_project):
+      logger.warning(f"Script already running for project: {resolved_project}")
+      return jsonify({"error": "Script already running"}), 409
     
     logger.info(f"Manual trigger: executing {script_path} for project {project}")
     
