@@ -3,7 +3,7 @@ set -e  # Exit immediately if any command fails
 
 source .env
 
-DOCKER_COMPOSE_FILENAME="docker-compose.prod.yml"
+DOCKER_COMPOSE_FILENAME="docker-compose.localhost.yml"
 PROJECT_DIR="/home/giraycoskun/Code/f1-board"
 
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
