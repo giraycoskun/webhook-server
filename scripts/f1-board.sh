@@ -23,11 +23,11 @@ echo "$GITHUB_TOKEN" | docker login ghcr.io -u giraycoskun --password-stdin
 echo "--- Stopping existing Docker containers ---"
 docker-compose -f $DOCKER_COMPOSE_FILENAME down
 
-echo "--- Pulling latest Docker images ---"
-docker-compose -f $DOCKER_COMPOSE_FILENAME pull
+echo "--- Building Docker images from scratch ---"
+docker-compose -f $DOCKER_COMPOSE_FILENAME build --no-cache
 
 echo "--- Starting Docker containers ---"
-docker-compose -f $DOCKER_COMPOSE_FILENAME up -d
+docker-compose -f $DOCKER_COMPOSE_FILENAME up -d --force-recreate
 
 docker-compose -f $DOCKER_COMPOSE_FILENAME ps
 

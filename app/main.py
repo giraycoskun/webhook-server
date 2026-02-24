@@ -254,7 +254,7 @@ def webhook(project: str):
             error:
               type: string
               example: Invalid signature
-      500:
+      404:
         description: Script not found in scripts directory
         schema:
           type: object
@@ -275,7 +275,7 @@ def webhook(project: str):
     script_path, resolved_project = resolve_script_path(project)
     if script_path is None:
         logger.error(f"Script not found for project: {project}")
-        return jsonify({"error": f"Script not found: {project}.sh"}), 500
+        return jsonify({"error": f"Script not found: {project}.sh"}), 404
 
     logger.info(f"Executing {script_path} for project {project}")
 
