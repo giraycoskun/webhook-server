@@ -24,7 +24,7 @@ echo "--- Stopping existing Docker containers ---"
 docker-compose -f $DOCKER_COMPOSE_FILENAME down
 
 echo "--- Building Docker images from scratch ---"
-docker-compose -f $DOCKER_COMPOSE_FILENAME build --no-cache
+docker-compose -f $DOCKER_COMPOSE_FILENAME build
 
 echo "--- Starting Docker containers ---"
 docker-compose -f $DOCKER_COMPOSE_FILENAME up -d --force-recreate
