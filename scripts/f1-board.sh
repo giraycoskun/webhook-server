@@ -21,7 +21,7 @@ echo "--- Logging into GitHub Container Registry ---"
 echo "$GITHUB_TOKEN" | docker login ghcr.io -u giraycoskun --password-stdin
 
 echo "--- Stopping existing Docker containers ---"
-docker-compose -f $DOCKER_COMPOSE_FILENAME down
+docker-compose -f $DOCKER_COMPOSE_FILENAME down --remove-orphans
 
 echo "--- Building Docker images from scratch ---"
 docker-compose -f $DOCKER_COMPOSE_FILENAME build
