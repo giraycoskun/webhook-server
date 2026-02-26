@@ -24,10 +24,10 @@ echo "--- Stopping existing Docker containers ---"
 docker-compose -f $DOCKER_COMPOSE_FILENAME down --remove-orphans
 
 echo "--- Building Docker images from scratch ---"
-docker-compose -f $DOCKER_COMPOSE_FILENAME build
+docker-compose -f $DOCKER_COMPOSE_FILENAME pull
 
 echo "--- Starting Docker containers ---"
-docker-compose -f $DOCKER_COMPOSE_FILENAME up -d --force-recreate
+docker-compose -f $DOCKER_COMPOSE_FILENAME up -d
 
 docker-compose -f $DOCKER_COMPOSE_FILENAME ps
 
