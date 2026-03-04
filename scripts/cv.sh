@@ -14,6 +14,7 @@ fi
 REPO_OWNER="${REPO_OWNER:-giraycoskun}"
 REPO_NAME="${REPO_NAME:-cv}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
+NGINX_GROUP="${NGINX_GROUP:-www-data}"
 
 # Where dated CV files are stored.
 CV_STORE_DIR="${CV_STORE_DIR:-/media/images/cv/pdf}"
@@ -83,6 +84,10 @@ else
     mv "${tmp_file}" "${target_file}"
     trap - EXIT
 fi
+
+# Ensure Nginx can read the served PDF regardless of current umask.
+chmod 0644 "${target_file}"
+chgrp "${NGINX_GROUP}" "${target_file}" 2>/dev/null || true
 
 mkdir -p "$(dirname "${SERVE_FILE}")"
 ln -sfn "${target_file}" "${SERVE_FILE}"
