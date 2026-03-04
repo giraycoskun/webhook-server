@@ -43,15 +43,16 @@ tree_json="$(curl_github "${GITHUB_API_URL}")"
 
 latest_file="$(
     printf '%s' "${tree_json}" \
-        | tr ',' '\n' \
-        | grep -Eo '"path":"cv_long_[0-9]{4}-[0-9]{2}-[0-9]{2}\.pdf"' \
-        | sed -E 's/^"path":"([^"]*)"$/\1/' \
+        | grep -Eo '"path"[[:space:]]*:[[:space:]]*"cv_long_[0-9]{4}-[0-9]{2}-[0-9]{2}\.pdf"' \
+        | sed -E 's/^"path"[[:space:]]*:[[:space:]]*"([^"]*)"$/\1/' \
         | sort \
         | tail -n 1
+        || true
 )"
 
 if [[ -z "${latest_file}" ]]; then
     echo "No file matching cv_long_YYYY-MM-DD.pdf was found in ${REPO_OWNER}/${REPO_NAME}."
+    echo "Checked URL: ${GITHUB_API_URL}"
     exit 1
 fi
 
