@@ -33,6 +33,8 @@ NGINX_GROUP="${NGINX_GROUP:-www-data}"
 CV_STORE_DIR="${CV_STORE_DIR:-/media/images/cv/pdf}"
 # Stable file path used by Nginx (serve this path forever).
 SERVE_FILE="${SERVE_FILE:-/media/images/cv.pdf}"
+# Set to 1 to remove old dated CV files after a successful update.
+CV_CLEANUP_OLD_FILES="${CV_CLEANUP_OLD_FILES:-1}"
 
 GITHUB_API_URL="https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${REPO_BRANCH}?recursive=1"
 
@@ -82,28 +84,53 @@ log "Target file path: ${target_file}"
 log "Raw download URL: ${raw_url}"
 
 if [[ -f "${target_file}" ]]; then
-    echo "--- ${latest_file} already exists locally ---"
+    log "Refreshing existing file: ${target_file}"
 else
-    log "Downloading ${latest_file}"
-    tmp_file="$(mktemp "${CV_STORE_DIR}/.${latest_file}.tmp.XXXXXX")"
-    trap 'rm -f "${tmp_file}"' EXIT
+    log "Downloading new file: ${target_file}"
+fi
 
-    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-        curl -fsSL \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -o "${tmp_file}" \
-            "${raw_url}"
-    else
-        curl -fsSL -o "${tmp_file}" "${raw_url}"
-    fi
+tmp_file="$(mktemp "${CV_STORE_DIR}/.${latest_file}.tmp.XXXXXX")"
+trap 'rm -f "${tmp_file}"' EXIT
 
-    if ! head -c 5 "${tmp_file}" | grep -q '^%PDF-'; then
-        echo "Downloaded file is not a valid PDF header: ${raw_url}"
-        exit 1
-    fi
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    curl -fsSL \
+        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        -o "${tmp_file}" \
+        "${raw_url}"
+else
+    curl -fsSL -o "${tmp_file}" "${raw_url}"
+fi
 
-    mv "${tmp_file}" "${target_file}"
-    trap - EXIT
+if ! head -c 5 "${tmp_file}" | grep -q '^%PDF-'; then
+    echo "Downloaded file is not a valid PDF header: ${raw_url}"
+    exit 1
+fi
+
+mv "${tmp_file}" "${target_file}"
+trap - EXIT
+
+cleanup_old_cvs() {
+    local keep_file="$1"
+    local removed=0
+    local file
+
+    shopt -s nullglob
+    for file in "${CV_STORE_DIR}"/cv_long_[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].pdf; do
+        if [[ "${file}" == "${keep_file}" ]]; then
+            continue
+        fi
+        rm -f -- "${file}"
+        removed=$((removed + 1))
+    done
+    shopt -u nullglob
+
+    log "Cleanup removed ${removed} old CV file(s)"
+}
+
+if [[ "${CV_CLEANUP_OLD_FILES}" == "1" ]]; then
+    cleanup_old_cvs "${target_file}"
+else
+    log "Cleanup skipped (CV_CLEANUP_OLD_FILES=${CV_CLEANUP_OLD_FILES})"
 fi
 
 # Ensure Nginx can read the served PDF regardless of current umask.
